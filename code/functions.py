@@ -178,9 +178,7 @@ def process_data(
 
     for row in dataset:
         text = row[text_column]
-        summary = row[summary_column]
         context = f"{INPUT_KEY}\n{text}"
-        response = f"{RESPONSE_KEY}\n{summary}"
         parts = [part for part in [blurb, instruction, context] if part]
         inputs = "\n\n".join(parts)
         inputs_encoded = tokenizer.encode(
@@ -188,6 +186,8 @@ def process_data(
         )
         inputs = tokenizer.decode(inputs_encoded, skip_special_tokens=True)
         if not no_summary:
+            summary = row[summary_column]
+            response = f"{RESPONSE_KEY}\n{summary}"
             parts = [part for part in [inputs, response, end] if part]
             inputs = "\n\n".join(parts)
         dic["inputs"].append(inputs)
