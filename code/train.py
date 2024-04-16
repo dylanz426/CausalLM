@@ -2,6 +2,7 @@ from sys import argv
 from os.path import exists
 import random
 from transformers import TrainingArguments, HfArgumentParser
+import torch
 from typing import Any, Tuple
 from functions import (
     AdditionalArgs,
@@ -15,6 +16,7 @@ from functions import (
     get_max_length,
     merge_and_save,
     _save_args,
+    test_predict,
 )
 
 
@@ -77,14 +79,21 @@ def main(t_args: TrainingArguments, required_args: AdditionalArgs):
     model.config.use_cache = False
     run(trainer, t_args.output_dir)
 
-    print("From Quantized to Full")
+    print("From Quantized to Full......")
     merge_and_save(
         t_args.output_dir,
         required_args.output_merged_dir,
         t_args.bf16,
-        test_dataset,
-        required_args.max_target_length,
     )
+
+    torch.cuda.empty_cache()
+    if t_args.do_predict:
+        print("Predict on Testing Set......")
+        test_predict(
+            required_args.output_merged_dir,
+            test_dataset,
+            required_args.max_target_length,
+        )
 
 
 if __name__ == "__main__":
