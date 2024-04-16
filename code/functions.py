@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import bitsandbytes as bnb
 from datasets import load_dataset, Dataset
 from functools import partial
-from typing import List, Dict, Any, Union, Optional
+from typing import List, Dict, Any, Union
 from peft import (
     LoraConfig,
     get_peft_model,
@@ -24,6 +24,7 @@ from transformers import (
     BatchEncoding,
     HfArgumentParser,
 )
+from tqdm import tqdm
 
 
 @dataclass
@@ -185,7 +186,9 @@ def process_data(
             inputs, truncation=True, max_length=max_input_length
         )
         inputs = tokenizer.decode(inputs_encoded, skip_special_tokens=True)
-        if not no_summary:
+        if no_summary:
+            inputs = inputs + "\n\n" + RESPONSE_KEY + "\n"
+        else:
             summary = row[summary_column]
             response = f"{RESPONSE_KEY}\n{summary}"
             parts = [part for part in [inputs, response, end] if part]
@@ -310,8 +313,6 @@ def merge_and_save(
     output_dir: str,
     output_merged_dir: str,
     use_bfloat: bool,
-    test_dataset: Optional[Dataset] = None,
-    max_target_length: Optional[int] = 512,
 ) -> None:
     dtype = torch.bfloat16 if use_bfloat else torch.float16
     model = AutoPeftModelForCausalLM.from_pretrained(
@@ -321,14 +322,31 @@ def merge_and_save(
     tokenizer = AutoTokenizer.from_pretrained(output_dir)
     model.save_pretrained(output_merged_dir, safe_serialization=True)
     tokenizer.save_pretrained(output_merged_dir)
-    if test_dataset:
-        generations = []
-        for data in test_dataset:
-            output = model.generate(
-                **data, do_sample=True, max_new_tokens=max_target_length
-            )
-            output_str = tokenizer.batch_decode(output, skip_special_tokens=True)
-            generations.append(output_str[0])
-        output_test_preds_file_path = os.path.join(output_dir, "test_generations.txt")
+
+
+def test_predict(
+    output_merged_dir: str,
+    test_dataset: Dataset,
+    max_target_length: int = 512,
+) -> None:
+    tokenizer = AutoTokenizer.from_pretrained(output_merged_dir)
+    model = AutoModelForCausalLM.from_pretrained(
+        output_merged_dir,
+        load_in_8bit=True,
+        torch_dtype=torch.float16,
+        device_map="auto",
+    )
+    output_test_preds_file_path = os.path.join(
+        output_merged_dir, "test_generations.txt"
+    )
+    generations = []
+    for data in tqdm(test_dataset, total=len(test_dataset)):
+        output = model.generate(
+            torch.tensor([data["input_ids"]]),
+            do_sample=True,
+            max_new_tokens=max_target_length,
+        )
+        output_str = tokenizer.batch_decode(output, skip_special_tokens=True)
+        generations.append(output_str[0])
         with open(output_test_preds_file_path, "w") as f:
             f.write("\n\n".join(generations))
