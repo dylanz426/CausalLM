@@ -1,10 +1,11 @@
 from dataclasses import dataclass, field
-from typing import List, Union, Tuple, Any
-import torch
-from transformers import HfArgumentParser, AutoModelForCausalLM, AutoTokenizer
-from functions import get_max_length, setup_dataset
+from typing import Any, List, Tuple, Union
+
 import pandas as pd
+import torch
+from functions import get_max_length, setup_dataset
 from tqdm import tqdm
+from transformers import AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
 
 
 @dataclass
