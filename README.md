@@ -33,7 +33,7 @@ python code/test.py \
     --custom_prompt "You are a help assistant who summarizes a dialogue within two sentences." \
     --text_column "dialogue"
 ```
-To get the maximum performance, make sure the testing prompt is consistent with the training prompt.
+To get the maximum performance, make sure the testing prompt is consistent with the training prompt. The saved output file will then be used for evaluation.
 
 ## Evaluate
 
