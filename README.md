@@ -43,7 +43,7 @@ The entailment evaluation metric `SCALE` is based on one of my recent papers [Fa
 
 We also use sentence transformers to compute the precision and recall based similarity scores. For each summary sentence, we compute the cosine similarity between its embedding and all the reference sentence embeddings and then find the reference sentence that is most similar.
 
-Evaluation metrics commonly used for summarization such as ROUGE scores and BERT scores are also included to compare the generated summary and the gold summary.
+Evaluation metrics commonly used for summarization such as `ROUGE` scores and `BERT` scores are also included to compare the generated summary and the gold summary.
 
 All of these scores can be obtained by one run
 ```
