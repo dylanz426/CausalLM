@@ -1,0 +1,9 @@
+bitsandbytes
+pandas
+evaluate
+torch
+datasets
+sentence_transformers
+peft
+tqdm
+transformers
