@@ -1,6 +1,6 @@
 # CausalLM
 
-This repo shows how to finetune, test, and evaluate decoder-only language models (such as Llama-2, Llama-3, Gemma, Mistral, etc.).
+This repo shows how to finetune, test, and evaluate decoder-only language models (such as Llama-2, Llama-3, Gemma, Mistral, etc.) for summarization.
 
 ## Install
 
