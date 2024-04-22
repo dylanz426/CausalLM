@@ -13,7 +13,7 @@ pip install -r requirements.txt
 
 Process and save your data into csv files. The example data files included in the `data` folder are processed from [DialogSum](https://github.com/cylnlp/dialogsum).
 
-## Train
+## Training
 
 All the arguments including training hyperparameters can be changed in the `code/config.json` file. Then we can train the model simply by running
 ```
@@ -21,7 +21,7 @@ python code/train.py code/config.json
 ```
 We use PEFT and LoRA for efficient fine-tuning on a quantized model then merging the adaptor into the full model. The minimum GPU requirement is NVIDIA A10 Tensor Core GPU.
 
-## Test
+## Testing
 
 Once the fine-tuning is finished, we can find the fine-tuned model in the `output_merged_dir` that we defined in the config before. Then we can test the model by generating some examples 
 ```
@@ -35,7 +35,7 @@ python code/test.py \
 ```
 To get the maximum performance, make sure the testing prompt is consistent with the training prompt. The saved output file will then be used for evaluation.
 
-## Evaluate
+## Evaluation
 
 The evaluation focuses on comparing the generated summary and the input texts, or comparing the generated summary and the gold summary.
 
