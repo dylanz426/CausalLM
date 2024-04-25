@@ -104,19 +104,19 @@ def process_text(text: str) -> List[str]:
         text.replace("\xa0", " ")
         .replace("\\n", "\n")
         .replace("\\t", "\t")
-        .replace("\n", "  ")
-        .replace("\t", "  ")
+        .replace("\n", "   ")
+        .replace("\t", "   ")
     )
 
-    text = re.sub("\s{2,}", "  ", text)
+    text = re.sub("\s{3,}", "   ", text)
     text = re.sub(r"\.+", ".", text)
 
     text = (
-        text.replace(":  ", ": ")
+        text.replace(":   ", ": ")
         .replace(". ", ".***")
         .replace("? ", "?***")
         .replace("! ", "!***")
-        .replace("  ", "***")
+        .replace("   ", "***")
     )
     return [s.strip() for s in text.split("***") if len(s.strip()) > 5]
 
