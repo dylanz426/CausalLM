@@ -60,6 +60,7 @@ def main(t_args: TrainingArguments, required_args: AdditionalArgs):
         max_input_length=max_length - required_args.max_target_length,
         max_target_length=required_args.max_target_length,
         custom_prompt=required_args.custom_prompt,
+        chat=required_args.chat,
         text_column=required_args.text_column,
         summary_column=required_args.summary_column,
     )
@@ -71,6 +72,7 @@ def main(t_args: TrainingArguments, required_args: AdditionalArgs):
         max_input_length=max_length - required_args.max_target_length,
         max_target_length=required_args.max_target_length,
         custom_prompt=required_args.custom_prompt,
+        chat=required_args.chat,
         text_column=required_args.text_column,
         no_summary=True,
     )
