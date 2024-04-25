@@ -201,28 +201,24 @@ def process_data(
     instruction = f"{INSTRUCTION_KEY}{custom_prompt}"
 
     if chat:
-        parts = [part for part in [INTRO_BLURB, instruction, INPUT_KEY] if part]
-        prompt = [{"role": "user", "content": "\n\n".join(parts)}]
+        prompt = f"{INTRO_BLURB}\n\n{instruction}\n\n{INPUT_KEY}"
+        message = [{"role": "user", "content": prompt}]
         prompt_len = len(
-            tokenizer.apply_chat_template(prompt, add_generation_prompt=True)
+            tokenizer.apply_chat_template(message, add_generation_prompt=True)
         )
     else:
-        parts = [
-            part for part in [INTRO_BLURB, instruction, INPUT_KEY, RESPONSE_KEY] if part
-        ]
-        prompt = "\n\n".join(parts)
+        prompt = f"{INTRO_BLURB}\n\n{instruction}\n\n{INPUT_KEY}\n\n{RESPONSE_KEY}"
         prompt_len = len(tokenizer.encode(prompt))
 
     dic = {"inputs": []}
+
     for row in dataset:
         text = row[text_column]
         text_encoded = tokenizer.encode(
             text, truncation=True, max_length=max_input_length - prompt_len
         )
         text = tokenizer.decode(text_encoded, skip_special_tokens=True)
-        context = f"{INPUT_KEY}{text}"
-        parts = [part for part in [INTRO_BLURB, instruction, context] if part]
-        inputs = "\n\n".join(parts)
+        inputs = f"{INTRO_BLURB}\n\n{instruction}\n\n{INPUT_KEY}{text}"
 
         if no_summary:
             if chat:
