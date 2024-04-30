@@ -29,11 +29,12 @@ python code/test.py \
     --model_name $fine-tuned_model_location \
     --test_file "data/dialogsum_test.csv" \
     --output_file "results/outputs.csv" \
+    --chat false \
     --max_target_length 256 \
     --custom_prompt "You are a help assistant who summarizes a dialogue within two sentences." \
     --text_column "dialogue"
 ```
-To get the maximum performance, make sure the testing prompt is consistent with the training prompt. The saved output file will then be used for evaluation.
+To get the maximum performance, make sure the testing prompt is consistent with the training prompt. If `chat` mode is used to process training data, it should be `true` for testing as well. The saved output file will then be used for evaluation.
 
 ## Evaluation
 
