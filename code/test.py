@@ -36,6 +36,14 @@ class Arguments:
         },
     )
 
+    chat: bool = field(
+        default=False,
+        metadata={
+            "help": "Use chat mode or not.",
+            "required": False,
+        },
+    )
+
     max_target_length: int = field(
         default=512,
         metadata={
