@@ -160,22 +160,7 @@ def _tokenize_input(
     e: Dict[str, Any],
     tokenizer: PreTrainedTokenizer,
     max_length: int,
-    chat: bool,
-    add_generation_prompt: bool = False,
 ) -> BatchEncoding:
-    if chat:
-        if add_generation_prompt:
-            return tokenizer.apply_chat_template(
-                e["inputs"],
-                truncation=True,
-                add_generation_prompt=True,
-                max_length=max_length,
-            )
-        return tokenizer.apply_chat_template(
-            e["inputs"],
-            truncation=True,
-            max_length=max_length,
-        )
     return tokenizer(
         e["inputs"],
         truncation=True,
@@ -250,13 +235,6 @@ def setup_dataset(
     no_summary: bool = False,
 ) -> Dataset:
     dataset = load_dataset("csv", data_files=csv_specs)
-    tok = partial(
-        _tokenize_input,
-        tokenizer=tokenizer,
-        max_length=max_input_length + max_target_length,
-        chat=chat,
-        add_generation_prompt=no_summary,
-    )
     d = process_data(
         dataset["train"],
         custom_prompt,
@@ -267,7 +245,24 @@ def setup_dataset(
         summary_column,
         no_summary,
     )
-    d = d.map(tok, batched=True)
+    if chat:
+        d = d.map(
+            lambda x: {
+                "input_ids": tokenizer.apply_chat_template(
+                    x["inputs"],
+                    truncation=True,
+                    max_length=max_input_length + max_target_length,
+                    add_generation_prompt=no_summary,
+                )
+            }
+        )
+    else:
+        tok = partial(
+            _tokenize_input,
+            tokenizer=tokenizer,
+            max_length=max_input_length + max_target_length,
+        )
+        d = d.map(tok, batched=True)
     return d
 
 
