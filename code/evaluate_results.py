@@ -239,7 +239,7 @@ def main(args: Arguments):
         )
         print("Computing similarity-precision scores......")
         scores["Similarity_p"] = compute_similarity_score(
-            args.sent_trans, inputs, outputs
+            args.sent_trans, input_sents, output_sents
         )
 
     if args.label_column:

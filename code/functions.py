@@ -63,6 +63,14 @@ class AdditionalArgs:
         },
     )
 
+    chat: bool = field(
+        default=False,
+        metadata={
+            "help": "Use chat mode or not.",
+            "required": False,
+        },
+    )
+
     max_target_length: int = field(
         default=512,
         metadata={
@@ -149,7 +157,9 @@ def _save_args(parser: HfArgumentParser):
 
 
 def _tokenize_input(
-    e: Dict[str, Any], tokenizer: PreTrainedTokenizer, max_length: int
+    e: Dict[str, Any],
+    tokenizer: PreTrainedTokenizer,
+    max_length: int,
 ) -> BatchEncoding:
     return tokenizer(
         e["inputs"],
@@ -162,39 +172,54 @@ def process_data(
     dataset: Dataset,
     custom_prompt: str,
     tokenizer: PreTrainedTokenizer,
+    chat: bool,
     max_input_length: int,
     text_column: str = "TEXT",
     summary_column: str = "SUMMARY",
     no_summary: bool = False,
 ) -> Dataset:
     INTRO_BLURB = "Below is an instruction that describes a task. Write a response that appropriately completes the request."
-    INSTRUCTION_KEY = "### Instruction:"
-    INPUT_KEY = "Input:"
-    RESPONSE_KEY = "### Response:"
+    INSTRUCTION_KEY = "### Instruction:\n"
+    INPUT_KEY = "Input:\n"
+    RESPONSE_KEY = "### Response:\n"
     END_KEY = "### End"
-    blurb = f"{INTRO_BLURB}"
-    instruction = f"{INSTRUCTION_KEY}\n{custom_prompt}"
-    end = f"{END_KEY}"
+    instruction = f"{INSTRUCTION_KEY}{custom_prompt}"
+
+    if chat:
+        prompt = f"{INTRO_BLURB}\n\n{instruction}\n\n{INPUT_KEY}"
+        message = [{"role": "user", "content": prompt}]
+        prompt_len = len(
+            tokenizer.apply_chat_template(message, add_generation_prompt=True)
+        )
+    else:
+        prompt = f"{INTRO_BLURB}\n\n{instruction}\n\n{INPUT_KEY}\n\n{RESPONSE_KEY}"
+        prompt_len = len(tokenizer.encode(prompt))
 
     dic = {"inputs": []}
 
     for row in dataset:
         text = row[text_column]
-        context = f"{INPUT_KEY}\n{text}"
-        parts = [part for part in [blurb, instruction, context] if part]
-        inputs = "\n\n".join(parts)
-        inputs_encoded = tokenizer.encode(
-            inputs, truncation=True, max_length=max_input_length
+        text_encoded = tokenizer.encode(
+            text, truncation=True, max_length=max_input_length - prompt_len
         )
-        inputs = tokenizer.decode(inputs_encoded, skip_special_tokens=True)
+        text = tokenizer.decode(text_encoded, skip_special_tokens=True)
+        inputs = f"{INTRO_BLURB}\n\n{instruction}\n\n{INPUT_KEY}{text}"
+
         if no_summary:
-            inputs = inputs + "\n\n" + RESPONSE_KEY + "\n"
+            if chat:
+                message = [{"role": "user", "content": inputs}]
+            else:
+                message = f"{inputs}\n\n{RESPONSE_KEY}"
         else:
-            summary = row[summary_column]
-            response = f"{RESPONSE_KEY}\n{summary}"
-            parts = [part for part in [inputs, response, end] if part]
-            inputs = "\n\n".join(parts)
-        dic["inputs"].append(inputs)
+            outputs = f"{row[summary_column]}\n\n{END_KEY}"
+            if chat:
+                message = [
+                    {"role": "user", "content": inputs},
+                    {"role": "assistant", "content": outputs},
+                ]
+            else:
+                message = f"{inputs}\n\n{RESPONSE_KEY}{outputs}"
+        dic["inputs"].append(message)
     return Dataset.from_dict(dic)
 
 
@@ -204,26 +229,40 @@ def setup_dataset(
     max_input_length: int,
     max_target_length: int,
     custom_prompt: str,
+    chat: bool,
     text_column: str = "TEXT",
     summary_column: str = "SUMMARY",
     no_summary: bool = False,
 ) -> Dataset:
     dataset = load_dataset("csv", data_files=csv_specs)
-    tok = partial(
-        _tokenize_input,
-        tokenizer=tokenizer,
-        max_length=max_input_length + max_target_length,
-    )
     d = process_data(
         dataset["train"],
         custom_prompt,
         tokenizer,
+        chat,
         max_input_length,
         text_column,
         summary_column,
         no_summary,
     )
-    d = d.map(tok, batched=True)
+    if chat:
+        d = d.map(
+            lambda x: {
+                "input_ids": tokenizer.apply_chat_template(
+                    x["inputs"],
+                    truncation=True,
+                    max_length=max_input_length + max_target_length,
+                    add_generation_prompt=no_summary,
+                )
+            }
+        )
+    else:
+        tok = partial(
+            _tokenize_input,
+            tokenizer=tokenizer,
+            max_length=max_input_length + max_target_length,
+        )
+        d = d.map(tok, batched=True)
     return d
 
 

@@ -4,6 +4,7 @@
     "test_file": ["./data/dialogsum_dev.csv"],
     "output_dir": "./results/peft_models/llama-2-v1",
     "output_merged_dir": "./results/finetuned_models/llama-2-v1",
+    "chat": false,
     "max_target_length": 256,
     "text_column": "dialogue",
     "summary_column": "summary",

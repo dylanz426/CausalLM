@@ -97,6 +97,7 @@ def main(args: Arguments):
         max_input_length=max_length - args.max_target_length,
         max_target_length=args.max_target_length,
         custom_prompt=args.custom_prompt,
+        chat=args.chat,
         text_column=args.text_column,
         no_summary=True,
     )
