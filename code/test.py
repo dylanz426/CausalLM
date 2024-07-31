@@ -111,11 +111,14 @@ def main(args: Arguments):
     )
 
     print("Start Testing......")
+    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     generations = []
     for data in tqdm(test_dataset, total=len(test_dataset)):
-        input_length = len(data["inputs"])
+        input_length = len(
+            tokenizer.decode(data["input_ids"], skip_special_tokens=True)
+        )
         output_tokens = model.generate(
-            torch.tensor([data["input_ids"]]),
+            torch.tensor([data["input_ids"]]).to(DEVICE),
             do_sample=True,
             max_new_tokens=args.max_target_length,
         )
